@@ -1,0 +1,55 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: auction-platform
+  datasource:
+    url: jdbc:mysql://localhost:3307/auction_platform?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC&createDatabaseIfNotExist=true
+    username: ${DB_USERNAME:root}
+    password: ${DB_PASSWORD:root}
+  jpa:
+    hibernate:
+      ddl-auto: validate   # schema is managed via schema.sql / migrations, not Hibernate auto-generation
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+  sql:
+    init:
+      mode: never   # schema.sql already applied once; MySQL's CREATE INDEX has no IF NOT EXISTS, so re-running crashes on restart
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
+  mail:
+    host: ${SMTP_HOST:localhost}
+    port: ${SMTP_PORT:587}
+    username: ${SMTP_USERNAME:}
+    password: ${SMTP_PASSWORD:}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
+app:
+  jwt:
+    secret: ${JWT_SECRET:change-this-to-a-256-bit-secret-in-prod-env-vars-0123456789}
+    access-token-expiration-ms: 900000        # 15 minutes
+    refresh-token-expiration-ms: 604800000    # 7 days
+  frontend:
+    base-url: ${FRONTEND_BASE_URL:http://localhost:3000}
+  email:
+    verification-token-expiration-minutes: 1440   # 24 hours
+    password-reset-token-expiration-minutes: 15
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+
+logging:
+  level:
+    com.auction.platform: DEBUG
