@@ -4,10 +4,13 @@ import com.auction.platform.dto.request.ChangePasswordRequest;
 import com.auction.platform.dto.request.UpdateProfileRequest;
 import com.auction.platform.dto.response.AddressResponse;
 import com.auction.platform.dto.response.UserProfileResponse;
+import com.auction.platform.entity.Role;
 import com.auction.platform.entity.User;
+import com.auction.platform.entity.enums.RoleType;
 import com.auction.platform.exception.WrongPasswordException;
 import com.auction.platform.mapper.AddressMapper;
 import com.auction.platform.repository.AddressRepository;
+import com.auction.platform.repository.RoleRepository;
 import com.auction.platform.repository.UserRepository;
 import com.auction.platform.service.ProfileImageStorageService;
 import com.auction.platform.service.ProfileService;
@@ -27,6 +30,7 @@ import java.util.stream.Collectors;
 public class ProfileServiceImpl implements ProfileService {
 
     private final UserRepository userRepository;
+    private final RoleRepository roleRepository;
     private final AddressRepository addressRepository;
     private final AddressMapper addressMapper;
     private final PasswordEncoder passwordEncoder;
@@ -68,6 +72,20 @@ public class ProfileServiceImpl implements ProfileService {
         user.setProfileImageUrl(relativeUrl);
         userRepository.save(user);
         return relativeUrl;
+    }
+
+    @Override
+    @Transactional
+    public void becomeSeller(User user) {
+        boolean alreadySeller = user.getRoles().stream()
+                .anyMatch(r -> r.getName() == RoleType.ROLE_SELLER);
+        if (alreadySeller) {
+            return; // idempotent no-op
+        }
+        Role sellerRole = roleRepository.findByName(RoleType.ROLE_SELLER)
+                .orElseThrow(() -> new IllegalStateException("ROLE_SELLER not seeded in database"));
+        user.getRoles().add(sellerRole);
+        userRepository.save(user);
     }
 
     private UserProfileResponse buildProfileResponse(User user) {

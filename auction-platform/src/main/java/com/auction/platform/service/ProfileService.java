@@ -11,4 +11,5 @@ public interface ProfileService {
     UserProfileResponse updateProfile(User user, UpdateProfileRequest request);
     void changePassword(User user, ChangePasswordRequest request);
     String uploadProfileImage(User user, MultipartFile file);
+    void becomeSeller(User user);
 }

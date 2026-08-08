@@ -61,4 +61,13 @@ public class ProfileController {
         String url = profileService.uploadProfileImage(principal.getUser(), file);
         return ResponseEntity.ok(ApiResponse.success("Image uploaded", Map.of("profileImageUrl", url)));
     }
+
+    @PostMapping("/become-seller")
+    @Operation(summary = "Self-service: grant yourself the Seller role (MVP simplification — no approval flow yet)")
+    public ResponseEntity<ApiResponse<MessageResponse>> becomeSeller(
+            @AuthenticationPrincipal CustomUserDetails principal) {
+        profileService.becomeSeller(principal.getUser());
+        return ResponseEntity.ok(ApiResponse.success("Role updated",
+                MessageResponse.of("You can now create auctions as a seller. Call /auth/refresh-token to get an updated access token.")));
+    }
 }
