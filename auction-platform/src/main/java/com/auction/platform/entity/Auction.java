@@ -6,6 +6,7 @@ import lombok.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Entity
 @Table(name = "auctions")
@@ -53,6 +54,16 @@ public class Auction {
     @Builder.Default
     @Column(nullable = false, length = 20)
     private AuctionStatus status = AuctionStatus.DRAFT;
+
+    @Column(name = "current_highest_bid", precision = 12, scale = 2)
+    private BigDecimal currentHighestBid;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "current_highest_bidder_id")
+    private User currentHighestBidder;
+
+    @OneToMany(mappedBy = "auction", fetch = FetchType.LAZY)
+    private List<AuctionImage> images;
 
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;

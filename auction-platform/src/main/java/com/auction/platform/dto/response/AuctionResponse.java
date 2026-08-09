@@ -6,6 +6,7 @@ import lombok.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Getter
 @Setter
@@ -24,8 +25,13 @@ public class AuctionResponse {
     /** Only populated when the caller is the owner or an admin — never shown publicly. */
     private BigDecimal reservePrice;
 
+    /** null if no reservePrice was set on this auction at all. */
+    private Boolean reserveMet;
+
     private BigDecimal minIncrement;
+    private BigDecimal currentHighestBid;
     private LocalDateTime startDate;
     private LocalDateTime endDate;
     private AuctionStatus status;
+    private List<AuctionImageResponse> images;
 }

@@ -71,6 +71,7 @@ public class SecurityConfig {
                         // wrongly treat /api/v1/auctions/mine as publicly accessible too.
                         .requestMatchers(HttpMethod.GET, "/api/v1/categories/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v1/auctions/mine").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/auctions/*/bids").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v1/auctions", "/api/v1/auctions/*").permitAll()
                         .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated()
