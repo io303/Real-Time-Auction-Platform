@@ -14,6 +14,7 @@ import com.auction.platform.exception.SelfBidException;
 import com.auction.platform.mapper.AuctionMapper;
 import com.auction.platform.repository.AuctionRepository;
 import com.auction.platform.repository.AutoBidRepository;
+import com.auction.platform.service.AuctionBroadcastService;
 import com.auction.platform.service.AutoBidResolutionService;
 import com.auction.platform.service.AutoBidService;
 import lombok.RequiredArgsConstructor;
@@ -30,6 +31,7 @@ public class AutoBidServiceImpl implements AutoBidService {
     private final AutoBidRepository autoBidRepository;
     private final AutoBidResolutionService resolutionService;
     private final AuctionMapper auctionMapper;
+    private final AuctionBroadcastService auctionBroadcastService;
 
     @Override
     @Transactional
@@ -59,6 +61,7 @@ public class AutoBidServiceImpl implements AutoBidService {
         autoBidRepository.save(autoBid);
 
         resolutionService.resolve(auction);
+        auctionBroadcastService.broadcastAfterCommit(auction);
 
         boolean isOwnerOrAdmin = false; // bidders never see reservePrice via this endpoint
         return auctionMapper.toResponse(auction, isOwnerOrAdmin);

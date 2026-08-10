@@ -16,6 +16,8 @@ import com.auction.platform.exception.SelfBidException;
 import com.auction.platform.mapper.AuctionMapper;
 import com.auction.platform.repository.AuctionRepository;
 import com.auction.platform.repository.BidRepository;
+import com.auction.platform.service.AuctionBroadcastService;
+import com.auction.platform.service.AutoBidResolutionService;
 import com.auction.platform.service.BidService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -32,6 +34,8 @@ public class BidServiceImpl implements BidService {
     private final AuctionRepository auctionRepository;
     private final BidRepository bidRepository;
     private final AuctionMapper auctionMapper;
+    private final AutoBidResolutionService autoBidResolutionService;
+    private final AuctionBroadcastService auctionBroadcastService;
 
     @Override
     @Transactional
@@ -66,6 +70,11 @@ public class BidServiceImpl implements BidService {
         auction.setCurrentHighestBid(request.getAmount());
         auction.setCurrentHighestBidder(bidder);
         Auction saved = auctionRepository.save(auction);
+
+        // Auto-Bid resolution (Phase 7): after a manual bid, check whether any active
+        // auto-bidder needs to be counter-raised — same lock, same transaction.
+        autoBidResolutionService.resolve(saved);
+        auctionBroadcastService.broadcastAfterCommit(saved);
 
         // Note: no WebSocket push here yet — that's Phase 8. Bidders currently need to poll
         // GET /api/v1/auctions/{id} or GET /api/v1/auctions/{id}/bids to see updates.

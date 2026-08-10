@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Auction WebSocket Test</title>
+    <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@stomp/stompjs@7/bundles/stomp.umd.min.js"></script>
+</head>
+<body style="font-family: sans-serif; max-width: 600px; margin: 40px auto;">
+    <h2>Auction Live Bid Test</h2>
+
+    <label>Auction ID: <input id="auctionId" value="1"></label>
+    <button onclick="connect()">Connect & Subscribe</button>
+    <button onclick="disconnect()">Disconnect</button>
+
+    <h3>Live Updates:</h3>
+    <pre id="log" style="background:#f4f4f4; padding:10px; height:300px; overflow:auto;"></pre>
+
+    <script>
+        let stompClient = null;
+
+        function log(msg) {
+            document.getElementById('log').textContent += msg + '\n\n';
+        }
+
+        function connect() {
+            const socket = new SockJS('http://localhost:8080/ws');
+            stompClient = new StompJs.Client({
+                webSocketFactory: () => socket,
+                // No Authorization header needed for this phase's public broadcasts —
+                // add one here (connectHeaders: { Authorization: 'Bearer <token>' }) once
+                // Phase 10 introduces authenticated personal notifications.
+                onConnect: () => {
+                    const auctionId = document.getElementById('auctionId').value;
+                    log('Connected. Subscribing to auction ' + auctionId + '...');
+                    stompClient.subscribe('/topic/auctions/' + auctionId, (message) => {
+                        log('UPDATE: ' + message.body);
+                    });
+                },
+                onStompError: (frame) => log('STOMP error: ' + frame.headers['message']),
+            });
+            stompClient.activate();
+        }
+
+        function disconnect() {
+            if (stompClient) stompClient.deactivate();
+            log('Disconnected.');
+        }
+    </script>
+</body>
+</html>
