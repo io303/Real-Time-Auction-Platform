@@ -14,6 +14,7 @@ import com.auction.platform.exception.SelfBidException;
 import com.auction.platform.mapper.AuctionMapper;
 import com.auction.platform.repository.AuctionRepository;
 import com.auction.platform.repository.AutoBidRepository;
+import com.auction.platform.service.AntiSnipeService;
 import com.auction.platform.service.AuctionBroadcastService;
 import com.auction.platform.service.AutoBidResolutionService;
 import com.auction.platform.service.AutoBidService;
@@ -32,6 +33,7 @@ public class AutoBidServiceImpl implements AutoBidService {
     private final AutoBidResolutionService resolutionService;
     private final AuctionMapper auctionMapper;
     private final AuctionBroadcastService auctionBroadcastService;
+    private final AntiSnipeService antiSnipeService;
 
     @Override
     @Transactional
@@ -61,6 +63,7 @@ public class AutoBidServiceImpl implements AutoBidService {
         autoBidRepository.save(autoBid);
 
         resolutionService.resolve(auction);
+        antiSnipeService.applyIfWithinWindow(auction);
         auctionBroadcastService.broadcastAfterCommit(auction);
 
         boolean isOwnerOrAdmin = false; // bidders never see reservePrice via this endpoint

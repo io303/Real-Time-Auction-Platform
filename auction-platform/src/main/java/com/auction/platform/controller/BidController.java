@@ -43,7 +43,7 @@ public class BidController {
     }
 
     @PostMapping("/force-live")
-    @Operation(summary = "[TEMPORARY — removed once Phase 9 scheduler exists] Manually mark a SCHEDULED auction as LIVE")
+    @Operation(summary = "[Manual override — scheduler now handles this automatically as of Phase 9] Force a SCHEDULED auction to LIVE immediately, useful for testing without waiting for startDate")
     public ResponseEntity<ApiResponse<AuctionResponse>> forceLive(
             @AuthenticationPrincipal CustomUserDetails principal,
             @PathVariable Long auctionId) {

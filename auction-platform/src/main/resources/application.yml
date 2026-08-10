@@ -50,6 +50,13 @@ app:
   storage:
     local:
       base-path: ${LOCAL_STORAGE_PATH:./uploads}
+  scheduler:
+    start-check-interval-ms: 10000
+    end-check-interval-ms: 10000
+  auction:
+    anti-snipe:
+      window-seconds: 15
+      extension-minutes: 2
 
 springdoc:
   api-docs:

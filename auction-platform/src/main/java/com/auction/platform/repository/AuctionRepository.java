@@ -11,6 +11,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -27,8 +28,15 @@ public interface AuctionRepository extends JpaRepository<Auction, Long> {
     /**
      * Locks the auction row for the duration of the transaction — used exclusively for bid
      * placement so concurrent bids on the same auction are serialized, not racing each other.
+     * Also reused by the Phase 9 scheduler to avoid a scheduler-vs-bid race condition.
      */
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT a FROM Auction a WHERE a.id = :id")
     Optional<Auction> findByIdForUpdate(Long id);
+
+    @Query("SELECT a.id FROM Auction a WHERE a.status = :status AND a.startDate <= :now")
+    List<Long> findIdsByStatusAndStartDateBefore(AuctionStatus status, LocalDateTime now);
+
+    @Query("SELECT a.id FROM Auction a WHERE a.status = :status AND a.endDate <= :now")
+    List<Long> findIdsByStatusAndEndDateBefore(AuctionStatus status, LocalDateTime now);
 }
