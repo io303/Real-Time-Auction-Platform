@@ -65,6 +65,10 @@ public class Auction {
     @OneToMany(mappedBy = "auction", fetch = FetchType.LAZY)
     private List<AuctionImage> images;
 
+    @Builder.Default
+    @Column(name = "ending_soon_notified", nullable = false)
+    private boolean endingSoonNotified = false;
+
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 

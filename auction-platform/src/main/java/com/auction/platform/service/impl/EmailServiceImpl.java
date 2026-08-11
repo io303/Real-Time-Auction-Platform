@@ -35,6 +35,11 @@ public class EmailServiceImpl implements EmailService {
         log.info("Password reset link for {} (dev visibility): {}", toEmail, link);
     }
 
+    @Override
+    public void sendNotificationEmail(String toEmail, String subject, String body) {
+        send(toEmail, subject, body);
+    }
+
     private void send(String to, String subject, String body) {
         try {
             SimpleMailMessage message = new SimpleMailMessage();

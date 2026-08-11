@@ -27,6 +27,7 @@ public class AntiSnipeServiceImpl implements AntiSnipeService {
         if (secondsRemaining >= 0 && secondsRemaining <= windowSeconds) {
             LocalDateTime extendedEndDate = auction.getEndDate().plusMinutes(extensionMinutes);
             auction.setEndDate(extendedEndDate);
+            auction.setEndingSoonNotified(false); // allow a fresh "ending soon" reminder once the new deadline approaches
             log.info("Anti-sniping triggered for auction {} — extended endDate to {}",
                     auction.getId(), extendedEndDate);
         }

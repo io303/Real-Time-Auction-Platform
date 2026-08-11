@@ -39,4 +39,7 @@ public interface AuctionRepository extends JpaRepository<Auction, Long> {
 
     @Query("SELECT a.id FROM Auction a WHERE a.status = :status AND a.endDate <= :now")
     List<Long> findIdsByStatusAndEndDateBefore(AuctionStatus status, LocalDateTime now);
+
+    @Query("SELECT a.id FROM Auction a WHERE a.status = :status AND a.endDate <= :cutoff AND a.endingSoonNotified = false")
+    List<Long> findIdsForEndingSoonNotification(AuctionStatus status, LocalDateTime cutoff);
 }

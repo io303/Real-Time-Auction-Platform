@@ -53,10 +53,13 @@ app:
   scheduler:
     start-check-interval-ms: 10000
     end-check-interval-ms: 10000
+    ending-soon-check-interval-ms: 15000
   auction:
     anti-snipe:
       window-seconds: 15
       extension-minutes: 2
+  notification:
+    ending-soon-minutes: 5
 
 springdoc:
   api-docs:
