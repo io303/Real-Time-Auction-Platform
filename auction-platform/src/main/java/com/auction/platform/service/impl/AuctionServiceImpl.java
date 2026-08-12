@@ -15,9 +15,12 @@ import com.auction.platform.mapper.AuctionMapper;
 import com.auction.platform.repository.AuctionRepository;
 import com.auction.platform.repository.CategoryRepository;
 import com.auction.platform.service.AuctionService;
+import com.auction.platform.service.search.AuctionSearchCriteria;
+import com.auction.platform.service.search.AuctionSpecifications;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -150,6 +153,35 @@ public class AuctionServiceImpl implements AuctionService {
         return auctionRepository.findBySellerOrderByCreatedAtDesc(seller).stream()
                 .map(auction -> auctionMapper.toResponse(auction, true))
                 .toList();
+    }
+
+    @Override
+    public Page<AuctionResponse> search(AuctionSearchCriteria criteria, Pageable pageable) {
+        AuctionStatus requestedStatus = null;
+        if (criteria.getStatus() != null) {
+            try {
+                requestedStatus = AuctionStatus.valueOf(criteria.getStatus().toUpperCase());
+            } catch (IllegalArgumentException e) {
+                throw new ApiException("Invalid status filter: " + criteria.getStatus(), HttpStatus.BAD_REQUEST);
+            }
+        }
+
+        // Privacy boundary: intersect the requested status with what's actually publicly
+        // visible — a caller can never widen this to see DRAFT auctions via search filters.
+        List<AuctionStatus> effectiveStatuses = requestedStatus != null && PUBLICLY_VISIBLE_STATUSES.contains(requestedStatus)
+                ? List.of(requestedStatus)
+                : PUBLICLY_VISIBLE_STATUSES;
+
+        Specification<Auction> spec = Specification
+                .where(AuctionSpecifications.hasKeyword(criteria.getKeyword()))
+                .and(AuctionSpecifications.hasCategory(criteria.getCategoryId()))
+                .and(AuctionSpecifications.hasSeller(criteria.getSellerId()))
+                .and(AuctionSpecifications.priceAtLeast(criteria.getMinPrice()))
+                .and(AuctionSpecifications.priceAtMost(criteria.getMaxPrice()))
+                .and(AuctionSpecifications.hasStatusIn(effectiveStatuses));
+
+        return auctionRepository.findAll(spec, pageable)
+                .map(auction -> auctionMapper.toResponse(auction, false));
     }
 
     private Auction findOwnedOrThrow(User requester, Long auctionId) {

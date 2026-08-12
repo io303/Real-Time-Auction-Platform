@@ -7,6 +7,7 @@ import com.auction.platform.dto.response.AuctionResponse;
 import com.auction.platform.dto.response.MessageResponse;
 import com.auction.platform.security.userdetails.CustomUserDetails;
 import com.auction.platform.service.AuctionService;
+import com.auction.platform.service.search.AuctionSearchCriteria;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -19,6 +20,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 @RestController
@@ -88,5 +90,26 @@ public class AuctionController {
             @AuthenticationPrincipal CustomUserDetails principal) {
         return ResponseEntity.ok(ApiResponse.success("Your auctions fetched",
                 auctionService.listMine(principal.getUser())));
+    }
+
+    @GetMapping("/search")
+    @Operation(summary = "Search auctions by keyword, category, price range, seller, and status — paginated and sortable")
+    public ResponseEntity<ApiResponse<Page<AuctionResponse>>> search(
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) Long categoryId,
+            @RequestParam(required = false) BigDecimal minPrice,
+            @RequestParam(required = false) BigDecimal maxPrice,
+            @RequestParam(required = false) Long sellerId,
+            @RequestParam(required = false) String status,
+            Pageable pageable) {
+        AuctionSearchCriteria criteria = AuctionSearchCriteria.builder()
+                .keyword(keyword)
+                .categoryId(categoryId)
+                .minPrice(minPrice)
+                .maxPrice(maxPrice)
+                .sellerId(sellerId)
+                .status(status)
+                .build();
+        return ResponseEntity.ok(ApiResponse.success("Search results fetched", auctionService.search(criteria, pageable)));
     }
 }
