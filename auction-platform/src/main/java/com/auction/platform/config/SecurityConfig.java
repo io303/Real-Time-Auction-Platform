@@ -62,6 +62,7 @@ public class SecurityConfig {
                                 "/uploads/**",
                                 "/ws/**",
                                 "/websocket-test.html",
+                                "/api/v1/payments/webhook",
                                 "/swagger-ui.html",
                                 "/swagger-ui/**",
                                 "/v3/api-docs/**",
