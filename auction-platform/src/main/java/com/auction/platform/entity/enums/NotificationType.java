@@ -5,5 +5,6 @@ public enum NotificationType {
     AUCTION_ENDING,
     OUTBID,
     WINNER,
-    PAYMENT_SUCCESSFUL   // wired in Phase 11
+    PAYMENT_SUCCESSFUL,
+    AUCTION_CANCELLED   // wired in Phase 13
 }

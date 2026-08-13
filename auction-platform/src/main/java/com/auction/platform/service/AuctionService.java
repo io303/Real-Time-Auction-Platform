@@ -19,4 +19,5 @@ public interface AuctionService {
     Page<AuctionResponse> listPublished(Pageable pageable);
     List<AuctionResponse> listMine(User seller);
     Page<AuctionResponse> search(AuctionSearchCriteria criteria, Pageable pageable);
+    AuctionResponse adminCancel(User admin, Long auctionId);
 }

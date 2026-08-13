@@ -7,7 +7,9 @@ import com.auction.platform.entity.enums.PaymentStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 
@@ -15,4 +17,7 @@ public interface PaymentRepository extends JpaRepository<Payment, Long> {
     Optional<Payment> findByGatewayOrderId(String gatewayOrderId);
     List<Payment> findByAuctionAndStatusIn(Auction auction, List<PaymentStatus> statuses);
     Page<Payment> findByBuyerOrderByCreatedAtDesc(User buyer, Pageable pageable);
+
+    @Query("SELECT COALESCE(SUM(p.amount), 0) FROM Payment p WHERE p.status = 'SUCCESS'")
+    BigDecimal sumSuccessfulPaymentAmounts();
 }

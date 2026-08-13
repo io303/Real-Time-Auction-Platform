@@ -7,6 +7,8 @@ import com.auction.platform.entity.Auction;
 import com.auction.platform.entity.Category;
 import com.auction.platform.entity.User;
 import com.auction.platform.entity.enums.AuctionStatus;
+import com.auction.platform.entity.enums.NotificationType;
+import com.auction.platform.entity.enums.PaymentStatus;
 import com.auction.platform.exception.ApiException;
 import com.auction.platform.exception.InvalidStateTransitionException;
 import com.auction.platform.exception.OwnershipException;
@@ -14,10 +16,14 @@ import com.auction.platform.exception.ResourceNotFoundException;
 import com.auction.platform.mapper.AuctionMapper;
 import com.auction.platform.repository.AuctionRepository;
 import com.auction.platform.repository.CategoryRepository;
+import com.auction.platform.repository.PaymentRepository;
+import com.auction.platform.service.AuctionBroadcastService;
 import com.auction.platform.service.AuctionService;
+import com.auction.platform.service.NotificationService;
 import com.auction.platform.service.search.AuctionSearchCriteria;
 import com.auction.platform.service.search.AuctionSpecifications;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -31,11 +37,15 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class AuctionServiceImpl implements AuctionService {
 
     private final AuctionRepository auctionRepository;
     private final CategoryRepository categoryRepository;
     private final AuctionMapper auctionMapper;
+    private final PaymentRepository paymentRepository;
+    private final AuctionBroadcastService auctionBroadcastService;
+    private final NotificationService notificationService;
 
     private static final List<AuctionStatus> PUBLICLY_VISIBLE_STATUSES =
             List.of(AuctionStatus.SCHEDULED, AuctionStatus.LIVE, AuctionStatus.ENDED);
@@ -182,6 +192,44 @@ public class AuctionServiceImpl implements AuctionService {
 
         return auctionRepository.findAll(spec, pageable)
                 .map(auction -> auctionMapper.toResponse(auction, false));
+    }
+
+    @Override
+    @Transactional
+    public AuctionResponse adminCancel(User admin, Long auctionId) {
+        Auction auction = auctionRepository.findById(auctionId)
+                .orElseThrow(() -> new ResourceNotFoundException("Auction not found"));
+
+        if (auction.getStatus() == AuctionStatus.CANCELLED) {
+            throw new InvalidStateTransitionException("Auction is already cancelled");
+        }
+        if (auction.getStatus() == AuctionStatus.ENDED) {
+            boolean hasSuccessfulPayment = !paymentRepository
+                    .findByAuctionAndStatusIn(auction, List.of(PaymentStatus.SUCCESS))
+                    .isEmpty();
+            if (hasSuccessfulPayment) {
+                throw new InvalidStateTransitionException(
+                        "Cannot cancel an auction with a completed payment. Use refund instead.");
+            }
+        }
+
+        auction.setStatus(AuctionStatus.CANCELLED);
+        Auction saved = auctionRepository.save(auction);
+        auctionBroadcastService.broadcastAfterCommit(saved);
+
+        notificationService.notifyWatchers(saved, NotificationType.AUCTION_CANCELLED,
+                "Auction removed: " + saved.getTitle(),
+                "This auction was removed by an administrator.");
+
+        if (saved.getCurrentHighestBidder() != null) {
+            notificationService.notifyUser(saved.getCurrentHighestBidder(), NotificationType.AUCTION_CANCELLED,
+                    "Auction removed: " + saved.getTitle(),
+                    "An auction you were winning was removed by an administrator. No payment is required.",
+                    saved);
+        }
+
+        log.info("Admin {} cancelled auction {}", admin.getId(), auctionId);
+        return auctionMapper.toResponse(saved, true);
     }
 
     private Auction findOwnedOrThrow(User requester, Long auctionId) {

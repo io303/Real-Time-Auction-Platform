@@ -43,4 +43,7 @@ public interface AuctionRepository extends JpaRepository<Auction, Long>, JpaSpec
 
     @Query("SELECT a.id FROM Auction a WHERE a.status = :status AND a.endDate <= :cutoff AND a.endingSoonNotified = false")
     List<Long> findIdsForEndingSoonNotification(AuctionStatus status, LocalDateTime cutoff);
+
+    @Query("SELECT a.status, COUNT(a) FROM Auction a GROUP BY a.status")
+    List<Object[]> countGroupedByStatus();
 }
