@@ -7,10 +7,12 @@ import com.auction.platform.entity.Auction;
 import com.auction.platform.entity.Bid;
 import com.auction.platform.entity.User;
 import com.auction.platform.entity.enums.AuctionStatus;
+import com.auction.platform.entity.enums.NotificationType;
 import com.auction.platform.exception.AuctionNotActiveException;
 import com.auction.platform.exception.BidTooLowException;
 import com.auction.platform.exception.InvalidStateTransitionException;
 import com.auction.platform.exception.OwnershipException;
+import com.auction.platform.exception.RateLimitExceededException;
 import com.auction.platform.exception.ResourceNotFoundException;
 import com.auction.platform.exception.SelfBidException;
 import com.auction.platform.mapper.AuctionMapper;
@@ -18,8 +20,11 @@ import com.auction.platform.repository.AuctionRepository;
 import com.auction.platform.repository.BidRepository;
 import com.auction.platform.service.AntiSnipeService;
 import com.auction.platform.service.AuctionBroadcastService;
+import com.auction.platform.service.AuctionCacheService;
 import com.auction.platform.service.AutoBidResolutionService;
 import com.auction.platform.service.BidService;
+import com.auction.platform.service.NotificationService;
+import com.auction.platform.service.RateLimiterService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -38,10 +43,19 @@ public class BidServiceImpl implements BidService {
     private final AutoBidResolutionService autoBidResolutionService;
     private final AuctionBroadcastService auctionBroadcastService;
     private final AntiSnipeService antiSnipeService;
+    private final NotificationService notificationService;
+    private final AuctionCacheService auctionCacheService;
+    private final RateLimiterService rateLimiterService;
 
     @Override
     @Transactional
     public AuctionResponse placeBid(User bidder, Long auctionId, PlaceBidRequest request) {
+        // Rate-limit check BEFORE acquiring the pessimistic lock — a spam-bidder shouldn't
+        // repeatedly lock the auction row and add latency for genuine bidders.
+        if (!rateLimiterService.isAllowed("bid:" + bidder.getId(), 10, 10)) {
+            throw new RateLimitExceededException("You're bidding too quickly. Please slow down.");
+        }
+
         // Pessimistic lock: this SELECT ... FOR UPDATE blocks any other concurrent bid on the
         // SAME auction until this transaction commits/rolls back. This is what makes bid
         // placement safe under high contention — two simultaneous bids can never both read the
@@ -69,9 +83,12 @@ public class BidServiceImpl implements BidService {
                 .build();
         bidRepository.save(bid);
 
+        User previousHighestBidder = auction.getCurrentHighestBidder();
+
         auction.setCurrentHighestBid(request.getAmount());
         auction.setCurrentHighestBidder(bidder);
         Auction saved = auctionRepository.save(auction);
+        auctionCacheService.evict(auctionId);
 
         // Auto-Bid resolution (Phase 7): after a manual bid, check whether any active
         // auto-bidder needs to be counter-raised — same lock, same transaction.
@@ -79,8 +96,13 @@ public class BidServiceImpl implements BidService {
         antiSnipeService.applyIfWithinWindow(saved);
         auctionBroadcastService.broadcastAfterCommit(saved);
 
-        // Note: no WebSocket push here yet — that's Phase 8. Bidders currently need to poll
-        // GET /api/v1/auctions/{id} or GET /api/v1/auctions/{id}/bids to see updates.
+        if (previousHighestBidder != null && !previousHighestBidder.getId().equals(bidder.getId())) {
+            notificationService.notifyUser(previousHighestBidder, NotificationType.OUTBID,
+                    "You've been outbid: " + saved.getTitle(),
+                    "Someone placed a higher bid. Current highest: " + saved.getCurrentHighestBid() + ".",
+                    saved);
+        }
+
         return auctionMapper.toResponse(saved, isOwnerOrAdmin(bidder, saved));
     }
 
@@ -116,6 +138,7 @@ public class BidServiceImpl implements BidService {
 
         auction.setStatus(AuctionStatus.LIVE);
         Auction saved = auctionRepository.save(auction);
+        auctionCacheService.evict(auctionId);
         return auctionMapper.toResponse(saved, true);
     }
 

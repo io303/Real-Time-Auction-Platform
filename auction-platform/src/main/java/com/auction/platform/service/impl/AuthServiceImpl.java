@@ -10,6 +10,7 @@ import com.auction.platform.entity.User;
 import com.auction.platform.entity.enums.RoleType;
 import com.auction.platform.exception.DuplicateResourceException;
 import com.auction.platform.exception.EmailNotVerifiedException;
+import com.auction.platform.exception.RateLimitExceededException;
 import com.auction.platform.mapper.UserMapper;
 import com.auction.platform.repository.RoleRepository;
 import com.auction.platform.repository.UserRepository;
@@ -18,6 +19,7 @@ import com.auction.platform.security.userdetails.CustomUserDetails;
 import com.auction.platform.service.AuthService;
 import com.auction.platform.service.EmailVerificationService;
 import com.auction.platform.service.RefreshTokenService;
+import com.auction.platform.service.RateLimiterService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -41,6 +43,7 @@ public class AuthServiceImpl implements AuthService {
     private final AuthenticationManager authenticationManager;
     private final EmailVerificationService emailVerificationService;
     private final RefreshTokenService refreshTokenService;
+    private final RateLimiterService rateLimiterService;
 
     @Override
     @Transactional
@@ -72,6 +75,10 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public AuthResponse login(LoginRequest request) {
+        if (!rateLimiterService.isAllowed("login:" + request.getEmail(), 5, 60)) {
+            throw new RateLimitExceededException("Too many login attempts. Please try again in a minute.");
+        }
+
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
         );

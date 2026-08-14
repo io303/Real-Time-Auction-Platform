@@ -5,6 +5,7 @@ import com.auction.platform.entity.User;
 import com.auction.platform.exception.ApiException;
 import com.auction.platform.exception.ResourceNotFoundException;
 import com.auction.platform.repository.UserRepository;
+import com.auction.platform.security.userdetails.CustomUserDetailsService;
 import com.auction.platform.service.AdminUserService;
 import com.auction.platform.service.RefreshTokenService;
 import lombok.RequiredArgsConstructor;
@@ -23,6 +24,7 @@ public class AdminUserServiceImpl implements AdminUserService {
 
     private final UserRepository userRepository;
     private final RefreshTokenService refreshTokenService;
+    private final CustomUserDetailsService customUserDetailsService;
 
     @Override
     public Page<AdminUserResponse> listUsers(String keyword, Pageable pageable) {
@@ -43,6 +45,7 @@ public class AdminUserServiceImpl implements AdminUserService {
 
         target.setEnabled(false);
         userRepository.save(target);
+        customUserDetailsService.evictCache(target.getEmail());
 
         // Immediately invalidate their active sessions — a ban should take effect right away,
         // not just block future logins.
@@ -57,6 +60,7 @@ public class AdminUserServiceImpl implements AdminUserService {
 
         target.setEnabled(true);
         userRepository.save(target);
+        customUserDetailsService.evictCache(target.getEmail());
     }
 
     private AdminUserResponse toResponse(User user) {

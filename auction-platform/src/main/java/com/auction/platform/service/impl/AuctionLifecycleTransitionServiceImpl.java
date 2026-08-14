@@ -5,6 +5,7 @@ import com.auction.platform.entity.enums.AuctionStatus;
 import com.auction.platform.entity.enums.NotificationType;
 import com.auction.platform.repository.AuctionRepository;
 import com.auction.platform.service.AuctionBroadcastService;
+import com.auction.platform.service.AuctionCacheService;
 import com.auction.platform.service.AuctionLifecycleTransitionService;
 import com.auction.platform.service.NotificationService;
 import lombok.RequiredArgsConstructor;
@@ -23,6 +24,7 @@ public class AuctionLifecycleTransitionServiceImpl implements AuctionLifecycleTr
     private final AuctionRepository auctionRepository;
     private final AuctionBroadcastService auctionBroadcastService;
     private final NotificationService notificationService;
+    private final AuctionCacheService auctionCacheService;
 
     @Value("${app.notification.ending-soon-minutes}")
     private long endingSoonMinutes;
@@ -36,6 +38,7 @@ public class AuctionLifecycleTransitionServiceImpl implements AuctionLifecycleTr
             if (auction.getStatus() == AuctionStatus.SCHEDULED && !auction.getStartDate().isAfter(LocalDateTime.now())) {
                 auction.setStatus(AuctionStatus.LIVE);
                 Auction saved = auctionRepository.save(auction);
+                auctionCacheService.evict(auctionId);
                 auctionBroadcastService.broadcastAfterCommit(saved);
                 notificationService.notifyWatchers(saved, NotificationType.AUCTION_STARTED,
                         "Auction started: " + saved.getTitle(),
@@ -55,6 +58,7 @@ public class AuctionLifecycleTransitionServiceImpl implements AuctionLifecycleTr
             if (auction.getStatus() == AuctionStatus.LIVE && !auction.getEndDate().isAfter(LocalDateTime.now())) {
                 auction.setStatus(AuctionStatus.ENDED);
                 Auction saved = auctionRepository.save(auction);
+                auctionCacheService.evict(auctionId);
                 auctionBroadcastService.broadcastAfterCommit(saved);
 
                 if (saved.getCurrentHighestBidder() != null) {
@@ -76,6 +80,7 @@ public class AuctionLifecycleTransitionServiceImpl implements AuctionLifecycleTr
             if (auction.getStatus() == AuctionStatus.LIVE && !auction.isEndingSoonNotified()) {
                 auction.setEndingSoonNotified(true);
                 auctionRepository.save(auction);
+                auctionCacheService.evict(auctionId);
                 notificationService.notifyWatchers(auction, NotificationType.AUCTION_ENDING,
                         "Ending soon: " + auction.getTitle(),
                         "An auction you're watching ends in less than " + endingSoonMinutes + " minutes.");

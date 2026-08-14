@@ -18,6 +18,7 @@ import com.auction.platform.repository.AuctionRepository;
 import com.auction.platform.repository.CategoryRepository;
 import com.auction.platform.repository.PaymentRepository;
 import com.auction.platform.service.AuctionBroadcastService;
+import com.auction.platform.service.AuctionCacheService;
 import com.auction.platform.service.AuctionService;
 import com.auction.platform.service.NotificationService;
 import com.auction.platform.service.search.AuctionSearchCriteria;
@@ -34,6 +35,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -46,6 +48,7 @@ public class AuctionServiceImpl implements AuctionService {
     private final PaymentRepository paymentRepository;
     private final AuctionBroadcastService auctionBroadcastService;
     private final NotificationService notificationService;
+    private final AuctionCacheService auctionCacheService;
 
     private static final List<AuctionStatus> PUBLICLY_VISIBLE_STATUSES =
             List.of(AuctionStatus.SCHEDULED, AuctionStatus.LIVE, AuctionStatus.ENDED);
@@ -102,6 +105,7 @@ public class AuctionServiceImpl implements AuctionService {
         auction.setEndDate(request.getEndDate());
 
         Auction saved = auctionRepository.save(auction);
+        auctionCacheService.evict(auctionId);
         return auctionMapper.toResponse(saved, true);
     }
 
@@ -120,6 +124,7 @@ public class AuctionServiceImpl implements AuctionService {
 
         auction.setStatus(AuctionStatus.SCHEDULED);
         Auction saved = auctionRepository.save(auction);
+        auctionCacheService.evict(auctionId);
         return auctionMapper.toResponse(saved, true);
     }
 
@@ -134,22 +139,58 @@ public class AuctionServiceImpl implements AuctionService {
         }
 
         auctionRepository.delete(auction);
+        auctionCacheService.evict(auctionId);
     }
 
     @Override
     public AuctionResponse getById(User requester, Long auctionId) {
-        Auction auction = auctionRepository.findById(auctionId)
-                .orElseThrow(() -> new ResourceNotFoundException("Auction not found"));
+        // Try cache first for the public view.
+        Optional<AuctionResponse> cached = auctionCacheService.getCachedPublicView(auctionId);
 
-        boolean isOwner = requester != null && auction.getSeller().getId().equals(requester.getId());
-        boolean isAdmin = requester != null && requester.getRoles().stream()
-                .anyMatch(r -> r.getName().name().equals("ROLE_ADMIN"));
+        if (cached.isEmpty()) {
+            Auction auction = auctionRepository.findById(auctionId)
+                    .orElseThrow(() -> new ResourceNotFoundException("Auction not found"));
 
-        if (auction.getStatus() == AuctionStatus.DRAFT && !isOwner && !isAdmin) {
-            throw new ResourceNotFoundException("Auction not found");
+            boolean isOwner = requester != null && auction.getSeller().getId().equals(requester.getId());
+            boolean isAdmin = requester != null && requester.getRoles().stream()
+                    .anyMatch(r -> r.getName().name().equals("ROLE_ADMIN"));
+
+            if (auction.getStatus() == AuctionStatus.DRAFT && !isOwner && !isAdmin) {
+                throw new ResourceNotFoundException("Auction not found");
+            }
+
+            AuctionResponse publicView = auctionMapper.toResponse(auction, false);
+            // Only cache non-draft auctions — drafts are private and shouldn't sit in a shared cache.
+            if (auction.getStatus() != AuctionStatus.DRAFT) {
+                auctionCacheService.putPublicView(auctionId, publicView);
+            }
+
+            return isOwner || isAdmin ? auctionMapper.toResponse(auction, true) : publicView;
         }
 
-        return auctionMapper.toResponse(auction, isOwner || isAdmin);
+        // Cache hit: we still need to know if THIS caller is privileged, to decide whether to
+        // overlay reservePrice — but we avoid a full entity load for the common (public) case.
+        boolean isAdmin = requester != null && requester.getRoles().stream()
+                .anyMatch(r -> r.getName().name().equals("ROLE_ADMIN"));
+        boolean isOwner = false;
+
+        if (requester != null && !isAdmin) {
+            // Cheap check: is this requester the seller? One lightweight query, not a full mapping.
+            isOwner = auctionRepository.findById(auctionId)
+                    .map(a -> a.getSeller().getId().equals(requester.getId()))
+                    .orElse(false);
+        }
+
+        if (!isOwner && !isAdmin) {
+            return cached.get(); // fast path — no DB hit at all for the vast majority of public views
+        }
+
+        // Privileged viewer on a cache hit: fetch just enough to overlay reservePrice.
+        Auction full = auctionRepository.findById(auctionId)
+                .orElseThrow(() -> new ResourceNotFoundException("Auction not found"));
+        AuctionResponse privileged = cached.get();
+        privileged.setReservePrice(full.getReservePrice());
+        return privileged;
     }
 
     @Override
@@ -215,6 +256,7 @@ public class AuctionServiceImpl implements AuctionService {
 
         auction.setStatus(AuctionStatus.CANCELLED);
         Auction saved = auctionRepository.save(auction);
+        auctionCacheService.evict(auctionId);
         auctionBroadcastService.broadcastAfterCommit(saved);
 
         notificationService.notifyWatchers(saved, NotificationType.AUCTION_CANCELLED,

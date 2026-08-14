@@ -1,12 +1,14 @@
 package com.auction.platform.service.impl;
 
+import com.auction.platform.config.RedisConfig;
 import com.auction.platform.dto.response.AuctionResponse;
 import com.auction.platform.entity.Auction;
 import com.auction.platform.mapper.AuctionMapper;
 import com.auction.platform.service.AuctionBroadcastService;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
@@ -16,21 +18,25 @@ import org.springframework.transaction.support.TransactionSynchronizationManager
 @Slf4j
 public class AuctionBroadcastServiceImpl implements AuctionBroadcastService {
 
-    private final SimpMessagingTemplate messagingTemplate;
+    private final RedisTemplate<String, String> redisTemplate;
     private final AuctionMapper auctionMapper;
+    private final ObjectMapper objectMapper;
 
     @Override
     public void broadcastAfterCommit(Auction auction) {
         AuctionResponse publicPayload = auctionMapper.toResponse(auction, false);
         Long auctionId = auction.getId();
 
-        Runnable doBroadcast = () -> {
+        Runnable doPublish = () -> {
             try {
-                messagingTemplate.convertAndSend("/topic/auctions/" + auctionId, publicPayload);
+                // Payload wraps auctionId + the response together, since Redis pub/sub is a
+                // single flat channel — the subscriber needs to know which STOMP topic to
+                // re-publish to locally.
+                String message = objectMapper.writeValueAsString(
+                        new AuctionUpdateMessage(auctionId, publicPayload));
+                redisTemplate.convertAndSend(RedisConfig.AUCTION_UPDATES_CHANNEL, message);
             } catch (Exception e) {
-                // A broadcast failure should never fail the underlying business operation —
-                // the bid itself already succeeded and was persisted; this is a best-effort push.
-                log.warn("Failed to broadcast auction update for auction {}: {}", auctionId, e.getMessage());
+                log.warn("Failed to publish auction update to Redis for auction {}: {}", auctionId, e.getMessage());
             }
         };
 
@@ -38,11 +44,13 @@ public class AuctionBroadcastServiceImpl implements AuctionBroadcastService {
             TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
                 @Override
                 public void afterCommit() {
-                    doBroadcast.run();
+                    doPublish.run();
                 }
             });
         } else {
-            doBroadcast.run();
+            doPublish.run();
         }
     }
+
+    public record AuctionUpdateMessage(Long auctionId, AuctionResponse payload) {}
 }

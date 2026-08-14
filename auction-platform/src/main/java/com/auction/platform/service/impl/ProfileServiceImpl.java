@@ -15,6 +15,7 @@ import com.auction.platform.repository.UserRepository;
 import com.auction.platform.service.ProfileImageStorageService;
 import com.auction.platform.service.ProfileService;
 import com.auction.platform.service.RefreshTokenService;
+import com.auction.platform.security.userdetails.CustomUserDetailsService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -36,6 +37,7 @@ public class ProfileServiceImpl implements ProfileService {
     private final PasswordEncoder passwordEncoder;
     private final RefreshTokenService refreshTokenService;
     private final ProfileImageStorageService profileImageStorageService;
+    private final CustomUserDetailsService customUserDetailsService;
 
     @Override
     public UserProfileResponse getProfile(User user) {
@@ -60,6 +62,7 @@ public class ProfileServiceImpl implements ProfileService {
 
         user.setPassword(passwordEncoder.encode(request.getNewPassword()));
         userRepository.save(user);
+        customUserDetailsService.evictCache(user.getEmail());
 
         // Same principle as Phase 2 reset-password: a password change should invalidate other sessions.
         refreshTokenService.revokeAllForUser(user);
@@ -86,6 +89,7 @@ public class ProfileServiceImpl implements ProfileService {
                 .orElseThrow(() -> new IllegalStateException("ROLE_SELLER not seeded in database"));
         user.getRoles().add(sellerRole);
         userRepository.save(user);
+        customUserDetailsService.evictCache(user.getEmail());
     }
 
     private UserProfileResponse buildProfileResponse(User user) {
