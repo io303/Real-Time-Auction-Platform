@@ -4,16 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="696e6458-360f-48f2-9f86-d00e9136bbe3" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/auction-platform/src/test/java/com/auction/platform/service/AddressServiceImplTest.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/auction-platform/src/test/java/com/auction/platform/service/AuctionServiceImplTest.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/auction-platform/src/test/java/com/auction/platform/service/AutoBidResolutionServiceImplTest.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/auction-platform/src/test/java/com/auction/platform/service/BidConcurrencyIntegrationTest.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/.gitignore" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/inspectionProfiles/Project_Default.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/sqldialects.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/auction-platform/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/auction-platform/pom.xml" afterDir="false" />
-    </list>
+    <list default="true" id="696e6458-360f-48f2-9f86-d00e9136bbe3" name="Changes" comment="" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -22,10 +13,10 @@
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
-  <component name="ProjectColorInfo"><![CDATA[{
-  "customColor": "",
-  "associatedIndex": 1
-}]]></component>
+  <component name="ProjectColorInfo">{
+  &quot;customColor&quot;: &quot;&quot;,
+  &quot;associatedIndex&quot;: 1
+}</component>
   <component name="ProjectId" id="3HwdvGd1T6tmSKQ4R2BbILcYk32" />
   <component name="ProjectViewState">
     <option name="hideEmptyMiddlePackages" value="true" />
@@ -40,9 +31,15 @@
     "Spring Boot.AuctionPlatformApplication.executor": "Run",
     "codeWithMe.voiceChat.enabledByDefault": "false",
     "git-widget-placeholder": "main",
-    "kotlin-language-version-configured": "true"
+    "kotlin-language-version-configured": "true",
+    "last_opened_file_path": "C:/Users/ASUS/OneDrive/Documents/GitHub/Real-Time-Auction-Platform/auction-platform"
   }
 }]]></component>
+  <component name="RecentsManager">
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="C:\Users\ASUS\OneDrive\Documents\GitHub\Real-Time-Auction-Platform\auction-platform" />
+    </key>
+  </component>
   <component name="SharedIndexes">
     <attachedChunks>
       <set>
