@@ -28,20 +28,34 @@ services:
       timeout: 5s
       retries: 5
 
-  # app:
-  #   build: .
-  #   container_name: auction-app
-  #   depends_on:
-  #     mysql:
-  #       condition: service_healthy
-  #     redis:
-  #       condition: service_healthy
-  #   environment:
-  #     SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/auction_platform?useSSL=false&serverTimezone=UTC
-  #     SPRING_DATA_REDIS_HOST: redis
-  #     JWT_SECRET: change-this-to-a-256-bit-secret-in-prod-env-vars-0123456789
-  #   ports:
-  #     - "8080:8080"
+  app:
+    build: .
+    container_name: auction-app
+    restart: unless-stopped
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      # Internal container-to-container hostnames/ports — NOT the host-mapped ones.
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/auction_platform?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC&createDatabaseIfNotExist=true
+      DB_USERNAME: root
+      DB_PASSWORD: root
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: 6379
+      JWT_SECRET: ${JWT_SECRET:-change-this-to-a-256-bit-secret-in-prod-env-vars-0123456789}
+      FRONTEND_BASE_URL: ${FRONTEND_BASE_URL:-http://localhost:3000}
+      LOCAL_STORAGE_PATH: /app/uploads
+      SMTP_HOST: ${SMTP_HOST:-localhost}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USERNAME: ${SMTP_USERNAME:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+    ports:
+      - "8080:8080"
+    volumes:
+      - uploads_data:/app/uploads
 
 volumes:
   mysql_data:
+  uploads_data:
