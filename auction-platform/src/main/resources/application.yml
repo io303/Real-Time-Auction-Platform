@@ -1,72 +1,96 @@
 server:
-  port: 8080
+  port: 8081
 
 spring:
   application:
     name: auction-platform
+
   datasource:
     url: jdbc:mysql://localhost:3307/auction_platform?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC&createDatabaseIfNotExist=true
-    username: ${DB_USERNAME:root}
-    password: ${DB_PASSWORD:root}
+    username: root
+    password: root
+
   jpa:
     hibernate:
-      ddl-auto: validate   # schema is managed via schema.sql / migrations, not Hibernate auto-generation
+      ddl-auto: validate
     show-sql: true
     properties:
       hibernate:
         format_sql: true
+
   sql:
     init:
-      mode: never   # schema.sql already applied once; MySQL's CREATE INDEX has no IF NOT EXISTS, so re-running crashes on restart
+      mode: never
+
   jackson:
     serialization:
       write-dates-as-timestamps: false
+
+  # =========================
+  # GMAIL SMTP
+  # =========================
   mail:
-    host: ${SMTP_HOST:localhost}
-    port: ${SMTP_PORT:587}
-    username: ${SMTP_USERNAME:}
-    password: ${SMTP_PASSWORD:}
+    host: smtp.gmail.com
+    port: 587
+    username: srahul12768@gmail.com
+    password: ucdczgldttnotjuo
     properties:
       mail:
         smtp:
           auth: true
           starttls:
             enable: true
+
   servlet:
     multipart:
       max-file-size: 5MB
       max-request-size: 5MB
 
+
 app:
   jwt:
-    secret: ${JWT_SECRET:change-this-to-a-256-bit-secret-in-prod-env-vars-0123456789}
-    access-token-expiration-ms: 900000        # 15 minutes
-    refresh-token-expiration-ms: 604800000    # 7 days
+    secret: change-this-to-a-256-bit-secret-in-prod-env-vars-0123456789
+    access-token-expiration-ms: 900000
+    refresh-token-expiration-ms: 604800000
+
   frontend:
-    base-url: ${FRONTEND_BASE_URL:http://localhost:3000}
+    base-url: http://localhost:3002
+
   email:
-    verification-token-expiration-minutes: 1440   # 24 hours
+    verification-token-expiration-minutes: 1440
     password-reset-token-expiration-minutes: 15
+
   storage:
     local:
-      base-path: ${LOCAL_STORAGE_PATH:./uploads}
+      base-path: ./uploads
+
   scheduler:
     start-check-interval-ms: 10000
     end-check-interval-ms: 10000
     ending-soon-check-interval-ms: 15000
+
   auction:
     anti-snipe:
       window-seconds: 15
       extension-minutes: 2
+
   notification:
     ending-soon-minutes: 5
+
 
 springdoc:
   api-docs:
     path: /v3/api-docs
+
   swagger-ui:
     path: /swagger-ui.html
+
 
 logging:
   level:
     com.auction.platform: DEBUG
+
+razorpay:
+  key-id: rzp_test_TRz7kaq9zGtDvJ
+  key-secret: r8tB64gBJ2vJI3qSuKLe4e9m
+  webhook-secret: dev-webhook-secret

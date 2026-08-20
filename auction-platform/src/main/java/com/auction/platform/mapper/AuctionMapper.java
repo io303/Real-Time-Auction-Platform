@@ -46,6 +46,18 @@ public class AuctionMapper {
                 .reserveMet(reserveMet)
                 .minIncrement(auction.getMinIncrement())
                 .currentHighestBid(auction.getCurrentHighestBid())
+
+                .currentHighestBidderId(
+                        auction.getCurrentHighestBidder() != null
+                                ? auction.getCurrentHighestBidder().getId()
+                                : null
+                )
+                .currentHighestBidderName(
+                        auction.getCurrentHighestBidder() != null
+                                ? auction.getCurrentHighestBidder().getFullName()
+                                : null
+                )
+
                 .startDate(auction.getStartDate())
                 .endDate(auction.getEndDate())
                 .status(auction.getStatus())

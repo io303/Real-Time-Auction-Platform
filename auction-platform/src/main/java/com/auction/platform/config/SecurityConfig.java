@@ -34,23 +34,40 @@ public class SecurityConfig {
 
     @Bean
     public DaoAuthenticationProvider authenticationProvider() {
-        DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
+        DaoAuthenticationProvider provider =
+                new DaoAuthenticationProvider();
+
         provider.setUserDetailsService(userDetailsService);
         provider.setPasswordEncoder(passwordEncoder());
+
         return provider;
     }
 
     @Bean
-    public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
+    public AuthenticationManager authenticationManager(
+            AuthenticationConfiguration config) throws Exception {
+
         return config.getAuthenticationManager();
     }
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain securityFilterChain(
+            HttpSecurity http) throws Exception {
+
         http
                 .csrf(csrf -> csrf.disable())
-                .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+
+                .sessionManagement(sm ->
+                        sm.sessionCreationPolicy(
+                                SessionCreationPolicy.STATELESS
+                        )
+                )
+
                 .authorizeHttpRequests(auth -> auth
+
+                        // =========================
+                        // PUBLIC AUTH APIs
+                        // =========================
                         .requestMatchers(
                                 "/api/v1/auth/register",
                                 "/api/v1/auth/login",
@@ -58,29 +75,75 @@ public class SecurityConfig {
                                 "/api/v1/auth/logout",
                                 "/api/v1/auth/verify-email",
                                 "/api/v1/auth/forgot-password",
-                                "/api/v1/auth/reset-password",
+                                "/api/v1/auth/reset-password"
+                        ).permitAll()
+
+                        // =========================
+                        // PUBLIC STATIC / SWAGGER
+                        // =========================
+                        .requestMatchers(
                                 "/uploads/**",
                                 "/ws/**",
                                 "/websocket-test.html",
-                                "/api/v1/payments/webhook",
                                 "/swagger-ui.html",
                                 "/swagger-ui/**",
                                 "/v3/api-docs/**",
                                 "/v3/api-docs.yaml"
                         ).permitAll()
-                        // Order matters below: specific rules must come before broader wildcard rules,
-                        // since Spring Security applies the FIRST matching rule. Without /mine listed
-                        // explicitly as authenticated() before the /* wildcard, the wildcard would
-                        // wrongly treat /api/v1/auctions/mine as publicly accessible too.
-                        .requestMatchers(HttpMethod.GET, "/api/v1/categories/**").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/v1/auctions/mine").authenticated()
-                        .requestMatchers(HttpMethod.GET, "/api/v1/auctions/*/bids").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/v1/auctions", "/api/v1/auctions/*").permitAll()
-                        .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
+
+                        // =========================
+                        // PAYMENT WEBHOOK
+                        // =========================
+                        .requestMatchers(
+                                "/api/v1/payments/webhook"
+                        ).permitAll()
+
+                        // =========================
+                        // PUBLIC CATEGORIES
+                        // =========================
+                        .requestMatchers(
+                                HttpMethod.GET,
+                                "/api/v1/categories",
+                                "/api/v1/categories/**"
+                        ).permitAll()
+
+                        // =========================
+                        // PUBLIC AUCTIONS
+                        // =========================
+                        .requestMatchers(
+                                HttpMethod.GET,
+                                "/api/v1/auctions",
+                                "/api/v1/auctions/**"
+                        ).permitAll()
+
+                        // =========================
+                        // PRIVATE MY AUCTIONS
+                        // =========================
+                        .requestMatchers(
+                                "/api/v1/auctions/mine"
+                        ).authenticated()
+
+                        // =========================
+                        // ADMIN
+                        // =========================
+                        .requestMatchers(
+                                "/api/v1/admin/**"
+                        ).hasRole("ADMIN")
+
+                        // =========================
+                        // EVERYTHING ELSE
+                        // =========================
                         .anyRequest().authenticated()
                 )
-                .authenticationProvider(authenticationProvider())
-                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
+
+                .authenticationProvider(
+                        authenticationProvider()
+                )
+
+                .addFilterBefore(
+                        jwtAuthFilter,
+                        UsernamePasswordAuthenticationFilter.class
+                );
 
         return http.build();
     }

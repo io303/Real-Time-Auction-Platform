@@ -12,5 +12,11 @@ public interface PaymentGatewayService {
     /** Verifies the webhook payload actually came from the gateway (HMAC signature check). */
     boolean verifyWebhookSignature(String rawPayload, String signatureHeader);
 
-    GatewayRefundResult refund(String gatewayTransactionId, BigDecimal amount);
+    void refund(String gatewayTransactionId, BigDecimal amount);
+
+    boolean verifyPaymentSignature(
+            String orderId,
+            String paymentId,
+            String signature
+    );
 }

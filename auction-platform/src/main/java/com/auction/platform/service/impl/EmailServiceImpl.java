@@ -39,18 +39,26 @@ public class EmailServiceImpl implements EmailService {
     public void sendNotificationEmail(String toEmail, String subject, String body) {
         send(toEmail, subject, body);
     }
-
     private void send(String to, String subject, String body) {
         try {
             SimpleMailMessage message = new SimpleMailMessage();
+            message.setFrom("srahul12768@gmail.com");
             message.setTo(to);
             message.setSubject(subject);
             message.setText(body);
+
+            System.out.println("========== EMAIL SENDING ==========");
+            System.out.println("FROM: " + "srahul12768@gmail.com");
+            System.out.println("TO: " + to);
+            System.out.println("SUBJECT: " + subject);
+
             mailSender.send(message);
+
+            System.out.println("========== EMAIL SENT SUCCESSFULLY ==========");
+
         } catch (Exception e) {
-            // Deliberately fail soft: no SMTP configured in dev shouldn't 500 the request.
-            // In production with real SMTP creds, this catch block is what you'd wire an alert to.
-            log.warn("Failed to send email to {} — SMTP likely not configured. Reason: {}", to, e.getMessage());
+            System.out.println("========== EMAIL FAILED ==========");
+            e.printStackTrace();
         }
     }
 }

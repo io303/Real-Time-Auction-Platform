@@ -24,10 +24,13 @@ public class CustomUserDetails implements UserDetails {
         return user;
     }
 
+
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return user.getRoles().stream()
-                .map(role -> new SimpleGrantedAuthority(role.getName().name()))
+                .map(role -> new SimpleGrantedAuthority(
+                        role.getName().name()
+                ))
                 .collect(Collectors.toList());
     }
 

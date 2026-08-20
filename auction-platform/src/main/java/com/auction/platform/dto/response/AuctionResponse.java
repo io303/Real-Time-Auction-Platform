@@ -15,23 +15,28 @@ import java.util.List;
 @AllArgsConstructor
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class AuctionResponse {
+
     private Long id;
     private String title;
     private String description;
     private CategoryResponse category;
     private String sellerName;
+
     private BigDecimal startingPrice;
 
-    /** Only populated when the caller is the owner or an admin — never shown publicly. */
     private BigDecimal reservePrice;
-
-    /** null if no reservePrice was set on this auction at all. */
     private Boolean reserveMet;
 
     private BigDecimal minIncrement;
     private BigDecimal currentHighestBid;
+
+    private Long currentHighestBidderId;
+    private String currentHighestBidderName;
+
     private LocalDateTime startDate;
     private LocalDateTime endDate;
+
     private AuctionStatus status;
+
     private List<AuctionImageResponse> images;
 }
