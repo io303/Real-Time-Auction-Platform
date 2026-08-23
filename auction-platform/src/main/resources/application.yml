@@ -6,17 +6,15 @@ spring:
     name: auction-platform
 
   datasource:
-    url: jdbc:mysql://${MYSQLHOST}:${MYSQLPORT}/${MYSQLDATABASE}?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+    url: jdbc:mysql://${MYSQLHOST}:${MYSQLPORT}/${MYSQLDATABASE}?useSSL=true&requireSSL=true&serverTimezone=UTC&allowPublicKeyRetrieval=true
     username: ${MYSQLUSER}
     password: ${MYSQLPASSWORD}
+    driver-class-name: com.mysql.cj.jdbc.Driver
 
   jpa:
     hibernate:
       ddl-auto: update
     show-sql: false
-    properties:
-      hibernate:
-        format_sql: true
 
   sql:
     init:
