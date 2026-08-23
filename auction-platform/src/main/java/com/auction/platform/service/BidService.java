@@ -8,9 +8,25 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 public interface BidService {
-    AuctionResponse placeBid(User bidder, Long auctionId, PlaceBidRequest request);
-    Page<BidResponse> getBidHistory(Long auctionId, Pageable pageable);
 
-    /** Temporary manual override until Phase 9's scheduler auto-transitions SCHEDULED -> LIVE. */
-    AuctionResponse forceLive(User requester, Long auctionId);
+    AuctionResponse placeBid(
+            User bidder,
+            Long auctionId,
+            PlaceBidRequest request
+    );
+
+    Page<BidResponse> getBidHistory(
+            Long auctionId,
+            Pageable pageable
+    );
+
+    Page<BidResponse> getMyBids(
+            User bidder,
+            Pageable pageable
+    );
+
+    AuctionResponse forceLive(
+            User requester,
+            Long auctionId
+    );
 }

@@ -1,9 +1,28 @@
+# Maven
 target/
 *.class
+
+# IntelliJ IDEA
 .idea/
 *.iml
+
+# VS Code
 .vscode/
-.DS_Store
-*.log
+
+# Environment / secrets
 .env
+.env.*
+application-local.yml
+
+# Uploaded files
+uploads/
+
+# Logs
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Spring Boot
 HELP.md

@@ -107,17 +107,52 @@ public class BidServiceImpl implements BidService {
     }
 
     @Override
-    public Page<BidResponse> getBidHistory(Long auctionId, Pageable pageable) {
-        Auction auction = auctionRepository.findById(auctionId)
-                .orElseThrow(() -> new ResourceNotFoundException("Auction not found"));
+    public Page<BidResponse> getBidHistory(
+            Long auctionId,
+            Pageable pageable
+    ) {
 
-        return bidRepository.findByAuctionOrderByCreatedAtDesc(auction, pageable)
+        Auction auction = auctionRepository.findById(auctionId)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("Auction not found")
+                );
+
+        return bidRepository
+                .findByAuctionOrderByCreatedAtDesc(
+                        auction,
+                        pageable
+                )
                 .map(bid -> BidResponse.builder()
                         .id(bid.getId())
+                        .auctionId(bid.getAuction().getId())
+                        .auctionTitle(bid.getAuction().getTitle())
                         .bidderName(bid.getBidder().getFullName())
                         .amount(bid.getAmount())
                         .createdAt(bid.getCreatedAt())
-                        .build());
+                        .build()
+                );
+    }
+
+    @Override
+    public Page<BidResponse> getMyBids(
+            User bidder,
+            Pageable pageable
+    ) {
+
+        return bidRepository
+                .findByBidderOrderByCreatedAtDesc(
+                        bidder,
+                        pageable
+                )
+                .map(bid -> BidResponse.builder()
+                        .id(bid.getId())
+                        .auctionId(bid.getAuction().getId())
+                        .auctionTitle(bid.getAuction().getTitle())
+                        .bidderName(bid.getBidder().getFullName())
+                        .amount(bid.getAmount())
+                        .createdAt(bid.getCreatedAt())
+                        .build()
+                );
     }
 
     @Override

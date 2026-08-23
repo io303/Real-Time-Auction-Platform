@@ -41,6 +41,7 @@ public class BidController {
         return ResponseEntity.ok(ApiResponse.success("Bid history fetched",
                 bidService.getBidHistory(auctionId, pageable)));
     }
+ 
 
     @PostMapping("/force-live")
     @Operation(summary = "[Manual override — scheduler now handles this automatically as of Phase 9] Force a SCHEDULED auction to LIVE immediately, useful for testing without waiting for startDate")

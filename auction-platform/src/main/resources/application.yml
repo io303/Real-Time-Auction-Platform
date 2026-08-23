@@ -1,22 +1,22 @@
 server:
-  port: 8081
+  port: ${PORT:8081}
 
 spring:
   application:
     name: auction-platform
 
   datasource:
-    url: jdbc:mysql://localhost:3307/auction_platform?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC&createDatabaseIfNotExist=true
-    username: root
-    password: root
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
 
   jpa:
     hibernate:
-      ddl-auto: validate
-    show-sql: true
+      ddl-auto: update
+    show-sql: false
     properties:
       hibernate:
-        format_sql: true
+        format_sql: false
 
   sql:
     init:
@@ -32,8 +32,8 @@ spring:
   mail:
     host: smtp.gmail.com
     port: 587
-    username: srahul12768@gmail.com
-    password: ucdczgldttnotjuo
+    username: ${MAIL_USERNAME}
+    password: ${MAIL_PASSWORD}
     properties:
       mail:
         smtp:
@@ -47,14 +47,18 @@ spring:
       max-request-size: 5MB
 
 
+# =========================
+# APPLICATION CONFIG
+# =========================
+
 app:
   jwt:
-    secret: change-this-to-a-256-bit-secret-in-prod-env-vars-0123456789
+    secret: ${JWT_SECRET}
     access-token-expiration-ms: 900000
     refresh-token-expiration-ms: 604800000
 
   frontend:
-    base-url: http://localhost:3002
+    base-url: ${FRONTEND_URL}
 
   email:
     verification-token-expiration-minutes: 1440
@@ -62,7 +66,7 @@ app:
 
   storage:
     local:
-      base-path: ./uploads
+      base-path: ${UPLOAD_PATH:./uploads}
 
   scheduler:
     start-check-interval-ms: 10000
@@ -78,6 +82,10 @@ app:
     ending-soon-minutes: 5
 
 
+# =========================
+# SWAGGER
+# =========================
+
 springdoc:
   api-docs:
     path: /v3/api-docs
@@ -86,11 +94,20 @@ springdoc:
     path: /swagger-ui.html
 
 
+# =========================
+# LOGGING
+# =========================
+
 logging:
   level:
-    com.auction.platform: DEBUG
+    com.auction.platform: INFO
+
+
+# =========================
+# RAZORPAY
+# =========================
 
 razorpay:
-  key-id: rzp_test_TRz7kaq9zGtDvJ
-  key-secret: r8tB64gBJ2vJI3qSuKLe4e9m
-  webhook-secret: dev-webhook-secret
+  key-id: ${RAZORPAY_KEY_ID}
+  key-secret: ${RAZORPAY_KEY_SECRET}
+  webhook-secret: ${RAZORPAY_WEBHOOK_SECRET}

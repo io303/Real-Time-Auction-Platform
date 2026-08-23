@@ -7,12 +7,20 @@ import java.time.LocalDateTime;
 
 @Getter
 @Setter
-@Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 public class BidResponse {
+
     private Long id;
+
+    private Long auctionId;
+
+    private String auctionTitle;
+
     private String bidderName;
+
     private BigDecimal amount;
+
     private LocalDateTime createdAt;
 }
