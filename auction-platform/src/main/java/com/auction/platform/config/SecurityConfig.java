@@ -32,13 +32,22 @@ public class SecurityConfig {
     private final CustomUserDetailsService userDetailsService;
     private final JwtAuthenticationFilter jwtAuthFilter;
 
+    // =========================================================
+    // PASSWORD ENCODER
+    // =========================================================
+
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 
+    // =========================================================
+    // AUTHENTICATION PROVIDER
+    // =========================================================
+
     @Bean
     public DaoAuthenticationProvider authenticationProvider() {
+
         DaoAuthenticationProvider provider =
                 new DaoAuthenticationProvider();
 
@@ -48,6 +57,10 @@ public class SecurityConfig {
         return provider;
     }
 
+    // =========================================================
+    // AUTHENTICATION MANAGER
+    // =========================================================
+
     @Bean
     public AuthenticationManager authenticationManager(
             AuthenticationConfiguration config) throws Exception {
@@ -55,28 +68,42 @@ public class SecurityConfig {
         return config.getAuthenticationManager();
     }
 
-    // =========================
+    // =========================================================
     // CORS CONFIGURATION
-    // =========================
+    // =========================================================
+
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
 
-        CorsConfiguration configuration = new CorsConfiguration();
+        CorsConfiguration configuration =
+                new CorsConfiguration();
+
+        // -----------------------------------------------------
+        // Allowed Frontend Origins
+        // -----------------------------------------------------
 
         configuration.setAllowedOrigins(List.of(
                 "http://localhost:3002",
                 "http://localhost:5173",
-                "https://YOUR-FRONTEND.onrender.com"
+                "https://bidly-frontend-8ysq.onrender.com"
         ));
 
+        // -----------------------------------------------------
+        // Allowed HTTP Methods
+        // -----------------------------------------------------
+
         configuration.setAllowedMethods(List.of(
-                "GET",
-                "POST",
-                "PUT",
-                "PATCH",
-                "DELETE",
-                "OPTIONS"
+                HttpMethod.GET.name(),
+                HttpMethod.POST.name(),
+                HttpMethod.PUT.name(),
+                HttpMethod.PATCH.name(),
+                HttpMethod.DELETE.name(),
+                HttpMethod.OPTIONS.name()
         ));
+
+        // -----------------------------------------------------
+        // Allowed Headers
+        // -----------------------------------------------------
 
         configuration.setAllowedHeaders(List.of(
                 "Authorization",
@@ -86,45 +113,91 @@ public class SecurityConfig {
                 "X-Requested-With"
         ));
 
+        // -----------------------------------------------------
+        // Headers exposed to frontend
+        // -----------------------------------------------------
+
         configuration.setExposedHeaders(List.of(
                 "Authorization"
         ));
 
+        // -----------------------------------------------------
+        // Allow cookies / credentials
+        // -----------------------------------------------------
+
         configuration.setAllowCredentials(true);
+
+        // -----------------------------------------------------
+        // Apply CORS configuration to all endpoints
+        // -----------------------------------------------------
 
         UrlBasedCorsConfigurationSource source =
                 new UrlBasedCorsConfigurationSource();
 
-        source.registerCorsConfiguration("/**", configuration);
+        source.registerCorsConfiguration(
+                "/**",
+                configuration
+        );
 
         return source;
     }
+
+    // =========================================================
+    // SECURITY FILTER CHAIN
+    // =========================================================
 
     @Bean
     public SecurityFilterChain securityFilterChain(
             HttpSecurity http) throws Exception {
 
         http
+
+                // -------------------------------------------------
+                // CSRF
+                // JWT based API -> CSRF disabled
+                // -------------------------------------------------
+
                 .csrf(csrf -> csrf.disable())
 
-                // IMPORTANT
-                .cors(cors -> cors.configurationSource(
-                        corsConfigurationSource()
-                ))
+                // -------------------------------------------------
+                // CORS
+                // -------------------------------------------------
 
-                .sessionManagement(sm ->
-                        sm.sessionCreationPolicy(
+                .cors(cors ->
+                        cors.configurationSource(
+                                corsConfigurationSource()
+                        )
+                )
+
+                // -------------------------------------------------
+                // SESSION MANAGEMENT
+                // -------------------------------------------------
+
+                .sessionManagement(session ->
+                        session.sessionCreationPolicy(
                                 SessionCreationPolicy.STATELESS
                         )
                 )
 
+                // -------------------------------------------------
+                // AUTHORIZATION RULES
+                // -------------------------------------------------
+
                 .authorizeHttpRequests(auth -> auth
 
-                        // OPTIONS preflight
-                        .requestMatchers(HttpMethod.OPTIONS, "/**")
-                        .permitAll()
+                        // =================================================
+                        // CORS PREFLIGHT
+                        // =================================================
 
+                        .requestMatchers(
+                                HttpMethod.OPTIONS,
+                                "/**"
+                        ).permitAll()
+
+                        // =================================================
                         // PUBLIC AUTH APIs
+                        // =================================================
+
                         .requestMatchers(
                                 "/api/v1/auth/register",
                                 "/api/v1/auth/login",
@@ -135,7 +208,10 @@ public class SecurityConfig {
                                 "/api/v1/auth/reset-password"
                         ).permitAll()
 
-                        // PUBLIC STATIC / SWAGGER
+                        // =================================================
+                        // PUBLIC STATIC FILES / WEBSOCKET / SWAGGER
+                        // =================================================
+
                         .requestMatchers(
                                 "/uploads/**",
                                 "/ws/**",
@@ -146,42 +222,68 @@ public class SecurityConfig {
                                 "/v3/api-docs.yaml"
                         ).permitAll()
 
+                        // =================================================
                         // PAYMENT WEBHOOK
+                        // =================================================
+
                         .requestMatchers(
                                 "/api/v1/payments/webhook"
                         ).permitAll()
 
+                        // =================================================
                         // PUBLIC CATEGORIES
+                        // =================================================
+
                         .requestMatchers(
                                 HttpMethod.GET,
                                 "/api/v1/categories",
                                 "/api/v1/categories/**"
                         ).permitAll()
 
+                        // =================================================
                         // PUBLIC AUCTIONS
+                        // =================================================
+
                         .requestMatchers(
                                 HttpMethod.GET,
                                 "/api/v1/auctions",
                                 "/api/v1/auctions/**"
                         ).permitAll()
 
-                        // PRIVATE MY AUCTIONS
+                        // =================================================
+                        // USER'S OWN AUCTIONS
+                        // =================================================
+
                         .requestMatchers(
                                 "/api/v1/auctions/mine"
                         ).authenticated()
 
-                        // ADMIN
+                        // =================================================
+                        // ADMIN APIs
+                        // =================================================
+
                         .requestMatchers(
                                 "/api/v1/admin/**"
                         ).hasRole("ADMIN")
 
+                        // =================================================
                         // EVERYTHING ELSE
+                        // =================================================
+
                         .anyRequest().authenticated()
                 )
+
+                // -------------------------------------------------
+                // Authentication Provider
+                // -------------------------------------------------
 
                 .authenticationProvider(
                         authenticationProvider()
                 )
+
+                // -------------------------------------------------
+                // JWT FILTER
+                // -------------------------------------------------
 
                 .addFilterBefore(
                         jwtAuthFilter,
