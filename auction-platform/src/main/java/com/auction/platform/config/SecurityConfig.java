@@ -17,6 +17,11 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+
+import java.util.List;
 
 @Configuration
 @EnableWebSecurity
@@ -50,12 +55,62 @@ public class SecurityConfig {
         return config.getAuthenticationManager();
     }
 
+    // =========================
+    // CORS CONFIGURATION
+    // =========================
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+
+        CorsConfiguration configuration = new CorsConfiguration();
+
+        configuration.setAllowedOrigins(List.of(
+                "http://localhost:3002",
+                "http://localhost:5173",
+                "https://YOUR-FRONTEND.onrender.com"
+        ));
+
+        configuration.setAllowedMethods(List.of(
+                "GET",
+                "POST",
+                "PUT",
+                "PATCH",
+                "DELETE",
+                "OPTIONS"
+        ));
+
+        configuration.setAllowedHeaders(List.of(
+                "Authorization",
+                "Content-Type",
+                "Accept",
+                "Origin",
+                "X-Requested-With"
+        ));
+
+        configuration.setExposedHeaders(List.of(
+                "Authorization"
+        ));
+
+        configuration.setAllowCredentials(true);
+
+        UrlBasedCorsConfigurationSource source =
+                new UrlBasedCorsConfigurationSource();
+
+        source.registerCorsConfiguration("/**", configuration);
+
+        return source;
+    }
+
     @Bean
     public SecurityFilterChain securityFilterChain(
             HttpSecurity http) throws Exception {
 
         http
                 .csrf(csrf -> csrf.disable())
+
+                // IMPORTANT
+                .cors(cors -> cors.configurationSource(
+                        corsConfigurationSource()
+                ))
 
                 .sessionManagement(sm ->
                         sm.sessionCreationPolicy(
@@ -65,9 +120,11 @@ public class SecurityConfig {
 
                 .authorizeHttpRequests(auth -> auth
 
-                        // =========================
+                        // OPTIONS preflight
+                        .requestMatchers(HttpMethod.OPTIONS, "/**")
+                        .permitAll()
+
                         // PUBLIC AUTH APIs
-                        // =========================
                         .requestMatchers(
                                 "/api/v1/auth/register",
                                 "/api/v1/auth/login",
@@ -78,9 +135,7 @@ public class SecurityConfig {
                                 "/api/v1/auth/reset-password"
                         ).permitAll()
 
-                        // =========================
                         // PUBLIC STATIC / SWAGGER
-                        // =========================
                         .requestMatchers(
                                 "/uploads/**",
                                 "/ws/**",
@@ -91,48 +146,36 @@ public class SecurityConfig {
                                 "/v3/api-docs.yaml"
                         ).permitAll()
 
-                        // =========================
                         // PAYMENT WEBHOOK
-                        // =========================
                         .requestMatchers(
                                 "/api/v1/payments/webhook"
                         ).permitAll()
 
-                        // =========================
                         // PUBLIC CATEGORIES
-                        // =========================
                         .requestMatchers(
                                 HttpMethod.GET,
                                 "/api/v1/categories",
                                 "/api/v1/categories/**"
                         ).permitAll()
 
-                        // =========================
                         // PUBLIC AUCTIONS
-                        // =========================
                         .requestMatchers(
                                 HttpMethod.GET,
                                 "/api/v1/auctions",
                                 "/api/v1/auctions/**"
                         ).permitAll()
 
-                        // =========================
                         // PRIVATE MY AUCTIONS
-                        // =========================
                         .requestMatchers(
                                 "/api/v1/auctions/mine"
                         ).authenticated()
 
-                        // =========================
                         // ADMIN
-                        // =========================
                         .requestMatchers(
                                 "/api/v1/admin/**"
                         ).hasRole("ADMIN")
 
-                        // =========================
                         // EVERYTHING ELSE
-                        // =========================
                         .anyRequest().authenticated()
                 )
 
