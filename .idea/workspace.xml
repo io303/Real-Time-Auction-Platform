@@ -5,13 +5,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="696e6458-360f-48f2-9f86-d00e9136bbe3" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/auction-platform/src/main/java/com/auction/platform/controller/MyBidsController.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/auction-platform/src/main/java/com/auction/platform/controller/BidController.java" beforeDir="false" afterPath="$PROJECT_DIR$/auction-platform/src/main/java/com/auction/platform/controller/BidController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/auction-platform/src/main/java/com/auction/platform/dto/response/BidResponse.java" beforeDir="false" afterPath="$PROJECT_DIR$/auction-platform/src/main/java/com/auction/platform/dto/response/BidResponse.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/auction-platform/src/main/java/com/auction/platform/repository/BidRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/auction-platform/src/main/java/com/auction/platform/repository/BidRepository.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/auction-platform/src/main/java/com/auction/platform/service/BidService.java" beforeDir="false" afterPath="$PROJECT_DIR$/auction-platform/src/main/java/com/auction/platform/service/BidService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/auction-platform/src/main/java/com/auction/platform/service/impl/BidServiceImpl.java" beforeDir="false" afterPath="$PROJECT_DIR$/auction-platform/src/main/java/com/auction/platform/service/impl/BidServiceImpl.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/auction-platform/src/main/resources/application.yml" beforeDir="false" afterPath="$PROJECT_DIR$/auction-platform/src/main/resources/application.yml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />

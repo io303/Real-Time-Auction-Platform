@@ -6,9 +6,9 @@ spring:
     name: auction-platform
 
   datasource:
-    url: ${DB_URL}
-    username: ${DB_USERNAME}
-    password: ${DB_PASSWORD}
+    url: jdbc:mysql://${MYSQLHOST}:${MYSQLPORT}/${MYSQLDATABASE}?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+    username: ${MYSQLUSER}
+    password: ${MYSQLPASSWORD}
 
   jpa:
     hibernate:
@@ -16,7 +16,7 @@ spring:
     show-sql: false
     properties:
       hibernate:
-        format_sql: false
+        format_sql: true
 
   sql:
     init:
@@ -26,9 +26,6 @@ spring:
     serialization:
       write-dates-as-timestamps: false
 
-  # =========================
-  # GMAIL SMTP
-  # =========================
   mail:
     host: smtp.gmail.com
     port: 587
@@ -47,10 +44,6 @@ spring:
       max-request-size: 5MB
 
 
-# =========================
-# APPLICATION CONFIG
-# =========================
-
 app:
   jwt:
     secret: ${JWT_SECRET}
@@ -58,7 +51,7 @@ app:
     refresh-token-expiration-ms: 604800000
 
   frontend:
-    base-url: ${FRONTEND_URL}
+    base-url: ${FRONTEND_URL:http://localhost:3002}
 
   email:
     verification-token-expiration-minutes: 1440
@@ -66,7 +59,7 @@ app:
 
   storage:
     local:
-      base-path: ${UPLOAD_PATH:./uploads}
+      base-path: ./uploads
 
   scheduler:
     start-check-interval-ms: 10000
@@ -82,10 +75,6 @@ app:
     ending-soon-minutes: 5
 
 
-# =========================
-# SWAGGER
-# =========================
-
 springdoc:
   api-docs:
     path: /v3/api-docs
@@ -94,18 +83,10 @@ springdoc:
     path: /swagger-ui.html
 
 
-# =========================
-# LOGGING
-# =========================
-
 logging:
   level:
     com.auction.platform: INFO
 
-
-# =========================
-# RAZORPAY
-# =========================
 
 razorpay:
   key-id: ${RAZORPAY_KEY_ID}
