@@ -1,4 +1,4 @@
-# Real-Time Auction Platform
+# Real-Time Auction Platform Backend
 
 An enterprise-grade, production-style backend for a real-time online auction platform — built end-to-end in Java 21 / Spring Boot 3, covering everything from JWT authentication to concurrency-safe bidding, proxy auto-bidding, WebSocket live updates, Redis caching, and a fully containerized deployment.
 
