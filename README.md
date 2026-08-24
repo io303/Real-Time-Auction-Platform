@@ -85,6 +85,19 @@ Controller → Service → Repository → Database
 | **Admin** | User ban/unban, auction removal (soft-cancel, history preserved), platform-wide statistics |
 | **Caching & Rate Limiting** | Redis-cached auction views and auth lookups, login/bid rate limiting, all fail-soft |
 
+## Screen Shot
+
+<img width="1897" height="1200" alt="Screenshot 2026-08-17 140620" src="https://github.com/user-attachments/assets/f389074d-ba69-4e92-af89-cefea0be0329" />
+<img width="1893" height="1200" alt="Screenshot 2026-08-17 142053" src="https://github.com/user-attachments/assets/d8817f7f-fcc5-4c0a-a509-4e0d1b32b350" />
+<img width="1895" height="1200" alt="Screenshot 2026-08-17 140656" src="https://github.com/user-attachments/assets/884bb7ac-eab4-4238-bb90-a193468a93fe" />
+<img width="1902" height="1200" alt="Screenshot 2026-08-17 140642" src="https://github.com/user-attachments/assets/ef795eda-fe06-41ab-a900-482af3533ac3" />
+<img width="1920" height="1200" alt="Screenshot 2026-08-17 140637" src="https://github.com/user-attachments/assets/0afcaff9-8ba8-48db-9ac9-da07df0ca0c5" />
+<img width="1897" height="1200" alt="Screenshot 2026-08-21 134310" src="https://github.com/user-attachments/assets/0a99cda8-a325-4da6-a4fb-591983b152e2" />
+<img width="1900" height="1200" alt="Screenshot 2026-08-21 134221" src="https://github.com/user-attachments/assets/bd5f3ad5-75ff-4867-87d2-cbea4d485a60" />
+
+
+
+
 ## Getting Started
 
 ### Prerequisites
