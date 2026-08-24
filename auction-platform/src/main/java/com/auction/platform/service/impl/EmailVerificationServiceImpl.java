@@ -1,4 +1,5 @@
-package com.auction.platform.service.impl;
+
+        package com.auction.platform.service.impl;
 
 import com.auction.platform.entity.User;
 import com.auction.platform.entity.VerificationToken;
@@ -41,25 +42,47 @@ public class EmailVerificationServiceImpl implements EmailVerificationService {
                 .build();
 
         verificationTokenRepository.save(token);
+
         emailService.sendVerificationEmail(user.getEmail(), rawToken);
     }
 
     @Override
     @Transactional
+    public void resendVerification(String email) {
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new InvalidTokenException("User not found"));
+
+        if (user.isEmailVerified()) {
+            throw new InvalidTokenException("Email is already verified");
+        }
+
+        sendVerification(user);
+    }
+
+    @Override
+    @Transactional
     public void verify(String rawToken) {
+
         String hash = TokenHasher.hash(rawToken);
+
         VerificationToken token = verificationTokenRepository
                 .findByTokenHashAndType(hash, TokenType.EMAIL_VERIFICATION)
-                .orElseThrow(() -> new InvalidTokenException("Invalid verification token"));
+                .orElseThrow(() ->
+                        new InvalidTokenException("Invalid verification token"));
 
         if (token.isUsed()) {
-            throw new InvalidTokenException("This verification link has already been used");
+            throw new InvalidTokenException(
+                    "This verification link has already been used");
         }
+
         if (token.isExpired()) {
-            throw new TokenExpiredException("Verification link has expired. Please request a new one.");
+            throw new TokenExpiredException(
+                    "Verification link has expired. Please request a new one.");
         }
 
         User user = token.getUser();
+
         user.setEmailVerified(true);
         userRepository.save(user);
 

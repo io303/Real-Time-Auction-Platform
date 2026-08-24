@@ -65,6 +65,26 @@ public class AuthController {
                 MessageResponse.of("Your email has been verified. You can now log in.")));
     }
 
+
+
+    @PostMapping("/resend-verification")
+    @Operation(summary = "Resend email verification link")
+    public ResponseEntity<ApiResponse<MessageResponse>> resendVerification(
+            @RequestParam String email) {
+
+        emailVerificationService.resendVerification(email);
+
+        return ResponseEntity.ok(
+                ApiResponse.success(
+                        "Verification email sent",
+                        MessageResponse.of(
+                                "A new verification link has been sent to your email."
+                        )
+                )
+        );
+    }
+
+
     @PostMapping("/forgot-password")
     @Operation(summary = "Request a password reset email")
     public ResponseEntity<ApiResponse<MessageResponse>> forgotPassword(@Valid @RequestBody ForgotPasswordRequest request) {
