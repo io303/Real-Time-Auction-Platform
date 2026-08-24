@@ -1,94 +1,85 @@
-server:
-  port: ${PORT:8080}
+  ```yaml
+  server:
+    port: ${PORT:8080}
 
-spring:
-  application:
-    name: auction-platform
+  spring:
+    application:
+      name: auction-platform
 
-  datasource:
-    url: ${SPRING_DATASOURCE_URL}
-    username: ${SPRING_DATASOURCE_USERNAME}
-    password: ${SPRING_DATASOURCE_PASSWORD}
-    driver-class-name: com.mysql.cj.jdbc.Driver
-  data:
-    redis:
-      url: ${REDIS_URL:redis://localhost:6379}
+    datasource:
+      url: ${SPRING_DATASOURCE_URL}
+      username: ${SPRING_DATASOURCE_USERNAME}
+      password: ${SPRING_DATASOURCE_PASSWORD}
+      driver-class-name: com.mysql.cj.jdbc.Driver
 
-  jpa:
-    hibernate:
-      ddl-auto: update
-    show-sql: false
-    properties:
+    data:
+      redis:
+        url: ${REDIS_URL:redis://localhost:6379}
+
+    jpa:
       hibernate:
-        dialect: org.hibernate.dialect.MySQLDialect
+        ddl-auto: update
+      show-sql: false
+      properties:
+        hibernate:
+          dialect: org.hibernate.dialect.MySQLDialect
 
-  sql:
-    init:
-      mode: never
+    sql:
+      init:
+        mode: never
 
-  jackson:
-    serialization:
-      write-dates-as-timestamps: false
+    jackson:
+      serialization:
+        write-dates-as-timestamps: false
 
-  mail:
-    host: smtp.gmail.com
-    port: 587
-    username: ${MAIL_USERNAME}
-    password: ${MAIL_PASSWORD}
-    properties:
-      mail:
-        smtp:
-          auth: true
-          starttls:
-            enable: true
+    servlet:
+      multipart:
+        max-file-size: 5MB
+        max-request-size: 5MB
 
-  servlet:
-    multipart:
-      max-file-size: 5MB
-      max-request-size: 5MB
+  app:
+    jwt:
+      secret: ${JWT_SECRET}
+      access-token-expiration-ms: 900000
+      refresh-token-expiration-ms: 604800000
 
-app:
-  jwt:
-    secret: ${JWT_SECRET}
-    access-token-expiration-ms: 900000
-    refresh-token-expiration-ms: 604800000
+    frontend:
+      base-url: ${FRONTEND_URL:http://localhost:3002}
 
-  frontend:
-    base-url: ${FRONTEND_URL:http://localhost:3002}
+    email:
+      verification-token-expiration-minutes: 1440
+      password-reset-token-expiration-minutes: 15
 
-  email:
-    verification-token-expiration-minutes: 1440
-    password-reset-token-expiration-minutes: 15
+    storage:
+      local:
+        base-path: ./uploads
 
-  storage:
-    local:
-      base-path: ./uploads
+    scheduler:
+      start-check-interval-ms: 10000
+      end-check-interval-ms: 10000
+      ending-soon-check-interval-ms: 15000
 
-  scheduler:
-    start-check-interval-ms: 10000
-    end-check-interval-ms: 10000
-    ending-soon-check-interval-ms: 15000
+    auction:
+      anti-snipe:
+        window-seconds: 15
+        extension-minutes: 2
 
-  auction:
-    anti-snipe:
-      window-seconds: 15
-      extension-minutes: 2
+    notification:
+      ending-soon-minutes: 5
 
-  notification:
-    ending-soon-minutes: 5
+  springdoc:
+    api-docs:
+      path: /v3/api-docs
 
-springdoc:
-  api-docs:
-    path: /v3/api-docs
+    swagger-ui:
+      path: /swagger-ui.html
 
-  swagger-ui:
-    path: /swagger-ui.html
+  logging:
+    level:
+      com.auction.platform: INFO
 
-logging:
-  level:
-    com.auction.platform: INFO
-
-razorpay:
-  key-id: ${RAZORPAY_KEY_ID}
-  key-secret: ${RAZORPAY_KEY_SECRET}
-  webhook-secret: ${RAZORPAY_WEBHOOK_SECRET}
+  razorpay:
+    key-id: ${RAZORPAY_KEY_ID}
+    key-secret: ${RAZORPAY_KEY_SECRET}
+    webhook-secret: ${RAZORPAY_WEBHOOK_SECRET}
+    ```
